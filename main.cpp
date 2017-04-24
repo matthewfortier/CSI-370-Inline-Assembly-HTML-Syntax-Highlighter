@@ -31,15 +31,20 @@ extern "C" void _stdcall printString(char buffer[], int count) {
 	cout << endl;
 }
 
-extern "C" void _stdcall checkColor(unordered_map<string, string> &keys, char buffer[], int count) {
+extern "C" int _stdcall checkColor(unordered_map<string, string> &keys, char* tempAddress, char buffer[], int count) {
 	string temp = "";
 	for (int i = 0; i < count; i++) {
 		temp += buffer[i];
 	}
 
-	if (keys[temp] == "blue") {
-		cout << "<span style='color:" + keys[temp] + ";" + "font-weight: bold" + "'>" + temp + "</span>" << endl;
+	if (keys[temp] != "") {
+		string str;
+		str.assign(tempAddress);
+		cout << str.find(temp) << endl;
+		return str.find(temp);
 	}
+
+	return -1;
 }
 
 vector<string> split(const string &s, char delim) {
@@ -142,6 +147,7 @@ int main() {
 					push count
 					lea eax, buffer
 					push eax
+					push tempAddress
 					lea eax, keys
 					push eax
 					call checkColor
