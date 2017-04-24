@@ -1,0 +1,14 @@
+push
+sub
+lea
+call
+addsd
+movsd
+divsd
+mulsd
+sqrtsd
+comisd
+jmp
+je
+pop
+ret
