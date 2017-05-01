@@ -5,56 +5,43 @@
 #include <sstream>
 #include <stdio.h>
 #include <unordered_map>
+#include <algorithm>
 #include <windows.h>
 using namespace std;
 
-string returnSpan(string input) {
-	return "<span>" + input + "</span>";
-}
+enum SyntaxColors {
+	INSTRUCTIONS,
+	REGISTERS,
+	DIRECTIVES,
+	JUMP,
+	LABELS,
+	CONSTANT,
+	BACKGROUND,
+	COMMENT,
+	PLAIN
+};
 
 string returnSpan(string input, string color, string style) {
 	return "<span style='color:" + color + ";" + style + "'>" + input + "</span>";
 }
 
-string returnSpanCat(string str, string sub, int length, int location) {
-	return str.replace(location, length, sub);
-}
-
-extern "C" void _stdcall debugPrint(char str) {
-	cout << str;
-}
-
-extern "C" void _stdcall printString(char buffer[], int count) {
-	for (int i = 0; i < count; i++) {
-		cout << buffer[i];
-	}
-	cout << endl;
-}
-
-extern "C" int _stdcall checkColor(unordered_map<string, string> &keys, char* tempAddress, char buffer[], int count) {
+extern "C" int _stdcall checkColor(unordered_map<string, string> &keys, vector<string> &results, char buffer[], int count) {
 	string temp = "";
 	for (int i = 0; i < count; i++) {
 		temp += buffer[i];
 	}
 
 	if (keys[temp] != "") {
-		string str;
-		str.assign(tempAddress);
-		cout << str.find(temp) << endl;
-		return str.find(temp);
-	}
 
-	return -1;
-}
+		results.push_back(temp);
+		results.push_back(keys[temp]);
 
-vector<string> split(const string &s, char delim) {
-	stringstream ss(s);
-	string item;
-	vector<string> tokens;
-	while (getline(ss, item, delim)) {
-		tokens.push_back(item);
-	}
-	return tokens;
+	} /*else if (isdigit(temp[0])) {
+		results.push_back(temp);
+		results.push_back("#FFD269");
+	}*/
+
+	return 0;
 }
 
 int main() {
@@ -63,24 +50,44 @@ int main() {
 	ifstream fin;
 
 	string temp = "";
-	string substr = "";
-	char format[] = "%s";
 	int lineLength = 0;
+	int found = 0;
+	int next = 0;
+	int colorCount = -1;
 	char* tempAddress;
-	byte found = 0;
-
-	int start = 0;
-	int end = 0;
+	
 	DWORD count = 0;
 	byte buffer[256] = "";
 
-	fin.open("instructions.txt");
-
-	unordered_map<string, string> keys;
 	string instruction;
+	string color;
+	string comment;
+	string replaceString = "";
+	unordered_map<string, string> keys;
+
+	vector<string> results;
+	vector<string> colors;
+
+	fin.open("colors.txt");
+
+	while (!fin.eof()) {
+		getline(fin, color);
+		color.erase(color.begin(), color.end() - 7);
+		colors.push_back(color);
+	}
+
+	fin.close();
+
+	fin.open("db.txt");
+
 	while (!fin.eof()) {
 		getline(fin, instruction);
-		keys[instruction] = "blue";
+		if (instruction[0] == '#') {
+			colorCount++;
+		}
+		else {
+			keys[instruction] = colors[colorCount];
+		}
 	}
 
 	fin.close();
@@ -88,94 +95,154 @@ int main() {
 	fin.open("code.asm");
 	fout.open("code.html");
 
-	//fout << "<pre style='color: #000000; background: #ffffff;'>" << endl;
-	//fout << "<h1>Assembly Syntax Highlighting</h1>" << endl;
+	fout << "<style>body{padding: 0; margin: 0;}</style>" << endl;
+	fout << "<pre style='padding: 15px; color: " + colors[PLAIN] + "; background: " + colors[BACKGROUND] + ";'>" << endl;
+	fout << "<h1>Assembly Syntax Highlighting</h1>" << endl;
+	fout << "<h2>Matthew Fortier</h2>" << endl;
 
 	while (!fin.eof()) {
 
 		getline(fin, temp);
 		lineLength = temp.length();
 
-		tempAddress = &temp[0];
+		if (keys[temp] != "") {
 
-		char tempChar;
+			replaceString = returnSpan(temp, keys[temp], "font-weight: bold;");
+			temp = replaceString;
 
-		_asm {
+		}
+		else if (temp[temp.length() - 1] == ':') {
 
-			mov ecx, lineLength
-			cmp ecx, 0
-			je endLine
+			replaceString = returnSpan(temp, colors[LABELS], "font-weight: bold;");
+			temp = replaceString;
 
-			mov esi, tempAddress
+		}
+		else {
 
-			parseLine:
-				
-			lodsb
-				mov tempChar, al
+			tempAddress = &temp[0];
 
-				cmp al, '\0'
+			char tempChar;
+
+			_asm {
+
+				mov ecx, lineLength
+				cmp ecx, 0
 				je endLine
 
-				cmp al, '\n'
-				je endLine
+				mov esi, tempAddress
 
-				cmp al, ','
-				je endLine
+				mov count, 0
 
-				; cmp al, ';'
-				; je comment
+				parseLine:
 
-				cmp al, 32
-				je notLetter
+					lodsb
+					mov tempChar, al
 
-				cmp al, '\t'
-				je notLetter
-				
-				lea edi, buffer
-				mov edx, count
-				mov [edi + edx], al
-				inc count
+					cmp al, 0x3B
+					je endLine
 
-				jmp continueParse
+					cmp al, 0x3A
+					je foundLetter
 
-				notLetter:
-					
-					mov eax, count
-					cmp eax, count
-					jnz continueParse
+					cmp al, 0x2E
+					je foundLetter
 
-					push count
-					lea eax, buffer
-					push eax
-					push tempAddress
-					lea eax, keys
-					push eax
-					call checkColor
-				
-					mov count, 0
-				
-				continueParse:
+					cmp al, 0x2D
+					je foundLetter
+
+					cmp al, 0x30
+					jl notLetter
+
+					cmp al, 0x57
+					jle foundLetter
+
+					cmp al, 0x41
+					jl notLetter
+
+					cmp al, 0x5A
+					jle foundLetter
+
+					cmp al, 0x61
+					jl notLetter
+
+					cmp al, 0x7A
+					jg notLetter
+
+					foundLetter :
+
+						lea edi, buffer
+						mov edx, count
+						mov[edi + edx], al
+						inc count
+
+						jmp continueParse
+
+					notLetter :
+
+						mov eax, count
+						cmp eax, count
+						jnz continueParse
+
+						push count
+						lea eax, buffer
+						push eax
+						lea eax, results
+						push eax
+						lea eax, keys
+						push eax
+						call checkColor
+
+						mov count, 0
+
+					continueParse:
 
 				loop parseLine
 
-			endLine:
-			
+			endLine :
+
 			comment:
 
+			}
+
+			found = temp.find(';');
+			if (found >= 0) {
+				comment = temp.substr(found);
+				replaceString = returnSpan(comment, colors[COMMENT], "");
+				temp.replace(found, temp.length(), replaceString);
+			}
+
+			found = temp.find('"');
+			next = temp.find('"', found + 1);
+			if (found >= 0) {
+				comment = temp.substr(found, next);
+				replaceString = returnSpan(comment, colors[CONSTANT], "");
+				temp.replace(found, next, replaceString);
+			}
+
+			if (results.size() != 0) {
+				for (int i = 0; i < results.size(); i += 2) {
+					replaceString = returnSpan(results[i], results[i + 1], "font-weight: bold;");
+					found = temp.find(results[i]);
+					if (found > 0) {
+						temp.replace(temp.find(results[i]), results[i].length(), replaceString);
+					}
+				}
+			}
 		}
 
-		cout << endl;
+		fout << temp << endl;
+
+		//cout << temp << endl;
+		results.clear();
 	}
 
-	//fout << "</pre>" << endl;
+	fout << "</pre>" << endl;
 
 	fin.close();
 	fout.close();
 
-	//ShellExecute(NULL, "open", "code.html",
-	//	NULL, NULL, SW_SHOWNORMAL);
-
-	system("pause");
+	ShellExecute(NULL, "open", "code.html",
+		NULL, NULL, SW_SHOWNORMAL);
 
 	return 0;
 }

@@ -78,6 +78,7 @@ _asmMain PROC
 	
 	lea rsp, [rbp]						; clean up stack and end
 	pop rbp
+
 	ret
 _asmMain ENDP
 END
