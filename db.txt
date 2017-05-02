@@ -43,7 +43,6 @@ btc
 btr
 bts
 bzhi
-call
 cbw
 cdq
 cdqe
@@ -220,7 +219,6 @@ invlpg
 invpcid
 iret
 iretd
-jmp
 jcc
 lahf
 lar
@@ -693,3 +691,5 @@ REAL8
 # Jumps
 je
 jle
+jmp
+call

@@ -1,0 +1,99 @@
+<style>
+body{
+  padding: 0;
+  margin: 0;
+}
+h1,h2,h3{
+  margin: 0;
+}
+</style>
+
+<pre style='padding: 15px; color: #c0cae1; background: #262b3b;'>
+<h1>MASM Assembly Syntax Highlighting</h1>
+<h2>Matthew Fortier</h2>
+<h3>May 1, 2017</h3>
+<span style='color:#7280c2;'>; Assignment 8.2 Orbital Velocity</span>
+<span style='color:#7280c2;'>; Author: Matthew Fortier</span>
+<span style='color:#7280c2;'>; Description: Calculates orbital velocity with given distance from the Earth</span>
+<span style='color:#7280c2;'>; Running MASM Assembler on Windows</span>
+<span style='color:#7280c2;'>; Using Visual Studio assemble, run, and debug code</span>
+<span style='color:#7280c2;'>; I certify that this is my own work</span>
+<span style='color:#3cbabc;font-weight: bold;'></span>
+<span style='color:#96ecf1;'>_getDouble </span><span style='color:#d1aec6;font-weight: bold;'>PROTO</span>						<span style='color:#7280c2;'>; declare external functions</span>
+<span style='color:#96ecf1;'>_printString </span><span style='color:#d1aec6;font-weight: bold;'>PROTO</span>
+<span style='color:#96ecf1;'>_printDouble </span><span style='color:#d1aec6;font-weight: bold;'>PROTO</span>
+<span style='color:#3cbabc;font-weight: bold;'></span>
+<span style='color:#d1aec6;font-weight: bold;'>.data</span>
+align <span style='color:#e1c782;font-weight: bold;'>16</span>								<span style='color:#7280c2;'>; align data on 16-byt boundary</span>
+G			<span style='color:#d1aec6;font-weight: bold;'>REAL8</span> 6.6741E-11			<span style='color:#7280c2;'>; constants in scientific notation</span>
+me			<span style='color:#d1aec6;font-weight: bold;'>REAL8</span> 5.9722E24
+distance    <span style='color:#d1aec6;font-weight: bold;'>REAL8</span> 6.371E6
+mph			<span style='color:#d1aec6;font-weight: bold;'>REAL8</span> 0.44704
+exitNum		<span style='color:#d1aec6;font-weight: bold;'>REAL8</span> 0.0
+radius	    <span style='color:#d1aec6;font-weight: bold;'>REAL8</span> 0.0
+ovelocity	<span style='color:#d1aec6;font-weight: bold;'>REAL8</span> 0.0
+										<span style='color:#7280c2;'>; display messages</span>
+endMessage <span style='color:#d1aec6;font-weight: bold;'>BYTE</span> <span style='color:#e1c782;'>"Continue? (1/0): ", 0</span>
+radiusMessage <span style='color:#d1aec6;font-weight: bold;'>BYTE</span> <span style='color:#e1c782;'>"Enter distance(m) of object from surface of the Earth: ", 0</span>
+msMessage <span style='color:#d1aec6;font-weight: bold;'>BYTE</span> <span style='color:#e1c782;'>"Orbital Velocity(m/s): ", 0</span>
+mphMessage <span style='color:#d1aec6;font-weight: bold;'>BYTE</span> <span style='color:#e1c782;'>"Orbital Velocity(mph): ", 0</span>
+<span style='color:#3cbabc;font-weight: bold;'></span>
+<span style='color:#d1aec6;font-weight: bold;'>.code</span>
+_asmMain <span style='color:#d1aec6;font-weight: bold;'>PROC</span> 
+	
+	<span style='color:#e1c782;font-weight: bold;'>push</span> <span style='color:#92c3f4;font-weight: bold;'>rbp</span>
+	<span style='color:#e1c782;font-weight: bold;'>sub</span> <span style='color:#92c3f4;font-weight: bold;'>rsp</span>, <span style='color:#e1c782;font-weight: bold;'>20h</span>
+	<span style='color:#e1c782;font-weight: bold;'>lea</span> <span style='color:#92c3f4;font-weight: bold;'>rbp</span>, [<span style='color:#92c3f4;font-weight: bold;'>rsp</span> + <span style='color:#e1c782;font-weight: bold;'>20h</span>]				<span style='color:#7280c2;'>; align the stack pointer</span>
+<span style='color:#3cbabc;font-weight: bold;'></span>
+<span style='color:#96ecf1;font-weight: bold;'>	velocity:</span>
+<span style='color:#3cbabc;font-weight: bold;'></span>
+		<span style='color:#e1c782;font-weight: bold;'>lea</span> <span style='color:#92c3f4;font-weight: bold;'>rcx</span>, radiusMessage			<span style='color:#7280c2;'>; load string to be printed</span>
+		<span style='color:#96ecf1;'><span style='color:#3cbabc;font-weight: bold;'>call</span> _printString				<span style='color:#7280c2;'>; print string to stdout</span></span>
+		<span style='color:#96ecf1;'><span style='color:#3cbabc;font-weight: bold;'>call</span> _getDouble					<span style='color:#7280c2;'>; use C++ function to get double</span></span>
+<span style='color:#3cbabc;font-weight: bold;'></span>
+		<span style='color:#e1c782;font-weight: bold;'>addsd</span> <span style='color:#92c3f4;font-weight: bold;'>xmm0</span>, distance			<span style='color:#7280c2;'>; getDouble puts return value in xmm0, add the radius of the earth</span>
+<span style='color:#3cbabc;font-weight: bold;'></span>
+		<span style='color:#e1c782;font-weight: bold;'>movsd</span> radius, <span style='color:#92c3f4;font-weight: bold;'>xmm0</span>				<span style='color:#7280c2;'>; mov the add result to radius variable</span>
+<span style='color:#3cbabc;font-weight: bold;'></span>
+		<span style='color:#e1c782;font-weight: bold;'>lea</span> <span style='color:#92c3f4;font-weight: bold;'>rcx</span>, msMessage
+		<span style='color:#96ecf1;'><span style='color:#3cbabc;font-weight: bold;'>call</span> _printString</span>
+<span style='color:#3cbabc;font-weight: bold;'></span>
+		<span style='color:#e1c782;font-weight: bold;'>movsd</span> <span style='color:#92c3f4;font-weight: bold;'>xmm0</span>, G					<span style='color:#7280c2;'>; load gravitational constant</span>
+		<span style='color:#e1c782;font-weight: bold;'>mulsd</span> <span style='color:#92c3f4;font-weight: bold;'>xmm0</span>, me					<span style='color:#7280c2;'>; multiply it against the mass of the eart</span>
+<span style='color:#3cbabc;font-weight: bold;'></span>
+		<span style='color:#e1c782;font-weight: bold;'>divsd</span> <span style='color:#92c3f4;font-weight: bold;'>xmm0</span>, radius				<span style='color:#7280c2;'>; divide by the calculated radius</span>
+<span style='color:#3cbabc;font-weight: bold;'></span>
+		<span style='color:#e1c782;font-weight: bold;'>sqrtsd</span> <span style='color:#92c3f4;font-weight: bold;'><span style='color:#92c3f4;font-weight: bold;'>xmm0</span></span>, xmm0				<span style='color:#7280c2;'>; square root the result</span>
+<span style='color:#3cbabc;font-weight: bold;'></span>
+		<span style='color:#e1c782;font-weight: bold;'>movsd</span> ovelocity, <span style='color:#92c3f4;font-weight: bold;'>xmm0</span>			<span style='color:#7280c2;'>; mov the result into the appropriate variable</span>
+<span style='color:#3cbabc;font-weight: bold;'></span>
+		<span style='color:#96ecf1;'><span style='color:#3cbabc;font-weight: bold;'>call</span> _printDouble				<span style='color:#7280c2;'>; print the results in (m/s)</span></span>
+<span style='color:#3cbabc;font-weight: bold;'></span>
+		<span style='color:#e1c782;font-weight: bold;'>lea</span> <span style='color:#92c3f4;font-weight: bold;'>rcx</span>, mphMessage
+		<span style='color:#96ecf1;'><span style='color:#3cbabc;font-weight: bold;'>call</span> _printString				</span>
+<span style='color:#3cbabc;font-weight: bold;'></span>
+		<span style='color:#e1c782;font-weight: bold;'>movsd</span> <span style='color:#92c3f4;font-weight: bold;'>xmm0</span>, ovelocity			
+		<span style='color:#e1c782;font-weight: bold;'>divsd</span> <span style='color:#92c3f4;font-weight: bold;'>xmm0</span>, mph					<span style='color:#7280c2;'>; divide velocity by mph constant</span>
+<span style='color:#3cbabc;font-weight: bold;'></span>
+		<span style='color:#96ecf1;'><span style='color:#3cbabc;font-weight: bold;'>call</span> _printDouble</span>
+<span style='color:#3cbabc;font-weight: bold;'></span>
+		<span style='color:#e1c782;font-weight: bold;'>lea</span> <span style='color:#92c3f4;font-weight: bold;'>rcx</span>, endMessage
+		<span style='color:#96ecf1;'><span style='color:#3cbabc;font-weight: bold;'>call</span> _printString</span>
+		<span style='color:#96ecf1;'><span style='color:#3cbabc;font-weight: bold;'>call</span> _getDouble</span>
+<span style='color:#3cbabc;font-weight: bold;'></span>
+		<span style='color:#e1c782;font-weight: bold;'>movsd</span> <span style='color:#92c3f4;font-weight: bold;'>xmm1</span>, <span style='color:#92c3f4;font-weight: bold;'>xmm0</span>				<span style='color:#7280c2;'>; mov the given double to xmm1 for comparison</span>
+		<span style='color:#e1c782;font-weight: bold;'>movsd</span> <span style='color:#92c3f4;font-weight: bold;'>xmm2</span>, exitNum				<span style='color:#7280c2;'>; compare against 0 constant</span>
+		<span style='color:#e1c782;font-weight: bold;'>comisd</span> <span style='color:#92c3f4;font-weight: bold;'>xmm1</span>, <span style='color:#92c3f4;font-weight: bold;'>xmm2</span>				<span style='color:#7280c2;'>; compare the two float registers and set the flags</span>
+		<span style='color:#3cbabc;font-weight: bold;'>je</span> endProgram					<span style='color:#7280c2;'>; end if equal</span>
+<span style='color:#3cbabc;font-weight: bold;'></span>
+		<span style='color:#3cbabc;font-weight: bold;'>jmp</span> velocity					<span style='color:#7280c2;'>; repeat</span>
+<span style='color:#3cbabc;font-weight: bold;'></span>
+<span style='color:#96ecf1;font-weight: bold;'>	endProgram:</span>
+	
+	<span style='color:#e1c782;font-weight: bold;'>lea</span> <span style='color:#92c3f4;font-weight: bold;'>rsp</span>, [<span style='color:#92c3f4;font-weight: bold;'>rbp</span>]						<span style='color:#7280c2;'>; clean up stack and end</span>
+	<span style='color:#e1c782;font-weight: bold;'>pop</span> <span style='color:#92c3f4;font-weight: bold;'>rbp</span>
+<span style='color:#3cbabc;font-weight: bold;'></span>
+	<span style='color:#e1c782;font-weight: bold;'>ret</span>
+_asmMain <span style='color:#d1aec6;font-weight: bold;'>ENDP</span>
+<span style='color:#d1aec6;font-weight: bold;'>END</span>
+</pre>
